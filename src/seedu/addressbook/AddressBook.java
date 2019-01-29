@@ -133,6 +133,13 @@ public class AddressBook {
     private static final String COMMAND_EXIT_DESC = "Exits the program.";
     private static final String COMMAND_EXIT_EXAMPLE = COMMAND_EXIT_WORD;
 
+    private static final String COMMAND_GROUP_WORD = "group";
+    private static final String COMMAND_GROUP_DESC = "Group a person identified by the index number used in "
+                                                   + "the last find/list call.";
+    private static final String COMMAND_GROUP_PARAMETERS = "INDEX "
+                                                         + "GROUP_INDEX";
+    private static final String COMMAND_GROUP_EXAMPLE = COMMAND_GROUP_WORD + " 1" + " 1";
+
     private static final String DIVIDER = "===================================================";
 
 
@@ -182,6 +189,9 @@ public class AddressBook {
      * List of all persons in the address book.
      */
     private static final ArrayList<String[]> ALL_PERSONS = new ArrayList<>();
+    private static final ArrayList<String[]> GROUP_1 = new ArrayList<>();
+    private static final ArrayList<String[]> GROUP_2 = new ArrayList<>();
+    private static final ArrayList<String[]> GROUP_3 = new ArrayList<>();
 
     /**
      * Stores the most recent list of persons shown to the user as a result of a user command.
@@ -381,6 +391,8 @@ public class AddressBook {
             return executeClearAddressBook();
         case COMMAND_HELP_WORD:
             return getUsageInfoForAllCommands();
+        case COMMAND_GROUP_WORD:
+            return executeGroupPerson(commandArgs);
         case COMMAND_EXIT_WORD:
             executeExitProgramRequest();
         default:
@@ -521,6 +533,39 @@ public class AddressBook {
     private static boolean isDeletePersonArgsValid(String rawArgs) {
         try {
             final int extractedIndex = Integer.parseInt(rawArgs.trim()); // use standard libraries to parse
+            return extractedIndex >= DISPLAYED_INDEX_OFFSET;
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+    }
+
+    /**
+     * Adds a person (specified by the command args) to the address book.
+     * The entire command arguments string is treated as a string representation of the person to add.
+     *
+     * @param commandArgs full command args string from the user
+     * @return feedback display message for the operation result
+     */
+    private static String executeGroupPerson(String commandArgs) {
+        if (!isGroupPersonArgsValid(commandArgs)) {
+            return getMessageForInvalidCommandInput(COMMAND_DELETE_WORD, getUsageInfoForDeleteCommand());
+        }
+
+        // add the person as specified
+        String[] personToGroup = ALL_PERSONS.get(2);
+        return getMessageForSuccessfulAddPerson(personToGroup);
+    }
+
+    /**
+     * Checks validity of group person argument string's format.
+     *
+     * @param rawArgs raw command args string for the delete person command
+     * @return whether the input args string is valid
+     */
+    private static boolean isGroupPersonArgsValid(String rawArgs) {
+        try {
+            final int extractedIndex = Integer.parseInt(rawArgs.trim()); // use standard libraries to parse
+            //todo: add group index check
             return extractedIndex >= DISPLAYED_INDEX_OFFSET;
         } catch (NumberFormatException nfe) {
             return false;
@@ -1087,6 +1132,7 @@ public class AddressBook {
                 + getUsageInfoForViewCommand() + LS
                 + getUsageInfoForDeleteCommand() + LS
                 + getUsageInfoForClearCommand() + LS
+                + getUsageInfoForGroupCommand() + LS
                 + getUsageInfoForExitCommand() + LS
                 + getUsageInfoForHelpCommand();
     }
@@ -1134,6 +1180,12 @@ public class AddressBook {
     private static String getUsageInfoForExitCommand() {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_EXIT_WORD, COMMAND_EXIT_DESC)
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_EXIT_EXAMPLE);
+    }
+
+    /** Returns the string for showing 'group' command usage instruction */
+    private static String getUsageInfoForGroupCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_GROUP_WORD, COMMAND_GROUP_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_GROUP_EXAMPLE) + LS;
     }
 
 
