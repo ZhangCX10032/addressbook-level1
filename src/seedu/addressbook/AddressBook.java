@@ -71,6 +71,7 @@ public class AddressBook {
     private static final String MESSAGE_COMMAND_HELP_PARAMETERS = "\tParameters: %1$s";
     private static final String MESSAGE_COMMAND_HELP_EXAMPLE = "\tExample: %1$s";
     private static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted Person: %1$s";
+    private static final String MESSAGE_GROUP_PERSON_SUCCESS = "Grouped Person: %1$s";
     private static final String MESSAGE_DISPLAY_PERSON_DATA = "%1$s  Phone Number: %2$s  Email: %3$s";
     private static final String MESSAGE_DISPLAY_LIST_ELEMENT_INDEX = "%1$d. ";
     private static final String MESSAGE_GOODBYE = "Exiting Address Book... Good bye!";
@@ -123,10 +124,9 @@ public class AddressBook {
 
     private static final String COMMAND_GROUP_WORD = "group";
     private static final String COMMAND_GROUP_DESC = "group a person in identified by the index number used in "
-                                                   + "the last find/list call into the group identified by the second"
-                                                   + "number";
-    private static final String COMMAND_GROUP_PARAMETER = "INDEX GROUP_INDEX";
-    private static final String COMMAND_GROUP_EXAMPLE = COMMAND_GROUP_WORD + " 1" + " 1";
+                                                   + "the last find/list";
+    private static final String COMMAND_GROUP_PARAMETER = "INDEX";
+    private static final String COMMAND_GROUP_EXAMPLE = COMMAND_GROUP_WORD + " 1";
 
 
     private static final String COMMAND_CLEAR_WORD = "clear";
@@ -190,6 +190,11 @@ public class AddressBook {
      * List of all persons in the address book.
      */
     private static final ArrayList<String[]> ALL_PERSONS = new ArrayList<>();
+
+    /**
+     * List of persons in the group.
+     */
+    private static final ArrayList<String[]> GROUP_PERSONS = new ArrayList<>();
 
     /**
      * Stores the most recent list of persons shown to the user as a result of a user command.
@@ -385,6 +390,8 @@ public class AddressBook {
             return executeListAllPersonsInAddressBook();
         case COMMAND_DELETE_WORD:
             return executeDeletePerson(commandArgs);
+        case COMMAND_GROUP_WORD:
+            return executeGroupPerson(commandArgs);
         case COMMAND_CLEAR_WORD:
             return executeClearAddressBook();
         case COMMAND_HELP_WORD:
@@ -521,6 +528,25 @@ public class AddressBook {
     }
 
     /**
+     * Deletes person identified using last displayed index.
+     *
+     * @param commandArgs full command args string from the user
+     * @return feedback display message for the operation result
+     */
+    private static String executeGroupPerson(String commandArgs) {
+        if (!isGroupPersonArgsValid(commandArgs)) {
+            return getMessageForInvalidCommandInput(COMMAND_GROUP_WORD, getUsageInfoForGroupCommand());
+        }
+        final int targetVisibleIndex = extractTargetIndexFromGroupPersonArgs(commandArgs);
+        if (!isDisplayIndexValidForLastPersonListingView(targetVisibleIndex)) {
+            return MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
+        }
+        final String[] targetInModel = getPersonByLastVisibleIndex(targetVisibleIndex);
+        return groupPersonFromAddressBook(targetInModel) ? getMessageForSuccessfulGroup(targetInModel) // success
+                : MESSAGE_PERSON_NOT_IN_ADDRESSBOOK; // not found
+    }
+
+    /**
      * Checks validity of delete person argument string's format.
      *
      * @param rawArgs raw command args string for the delete person command
@@ -545,6 +571,15 @@ public class AddressBook {
         return Integer.parseInt(rawArgs.trim());
     }
 
+    /**
+     * Extracts the target's index from the raw group person args string
+     *
+     * @param rawArgs raw command args string for the group person command
+     * @return extracted index
+     */
+    private static int extractTargetIndexFromGroupPersonArgs(String rawArgs) {
+        return Integer.parseInt(rawArgs.trim());
+    }
 
     /**
      * Checks validity of group person argument string's format.
@@ -580,6 +615,17 @@ public class AddressBook {
      */
     private static String getMessageForSuccessfulDelete(String[] deletedPerson) {
         return String.format(MESSAGE_DELETE_PERSON_SUCCESS, getMessageForFormattedPersonData(deletedPerson));
+    }
+
+    /**
+     * Constructs a feedback message for a successful group person command execution.
+     *
+     * @see #executeGroupPerson(String)
+     * @param groupedPerson successfully grouped
+     * @return successful group person feedback message
+     */
+    private static String getMessageForSuccessfulGroup(String[] groupedPerson) {
+        return String.format(MESSAGE_GROUP_PERSON_SUCCESS, getMessageForFormattedPersonData(groupedPerson));
     }
 
     /**
@@ -819,6 +865,20 @@ public class AddressBook {
      */
     private static boolean deletePersonFromAddressBook(String[] exactPerson) {
         final boolean changed = ALL_PERSONS.remove(exactPerson);
+        if (changed) {
+            savePersonsToFile(getAllPersonsInAddressBook(), storageFilePath);
+        }
+        return changed;
+    }
+
+    /**
+     * Group the specified person from the addressbook if it is inside.
+     *
+     * @param exactPerson the actual person inside the address book (exactPerson == the person to delete in the full list)
+     * @return true if the given person was found and grouped in the model
+     */
+    private static boolean groupPersonFromAddressBook(String[] exactPerson) {
+        final boolean changed = GROUP_PERSONS.add(exactPerson);
         if (changed) {
             savePersonsToFile(getAllPersonsInAddressBook(), storageFilePath);
         }
