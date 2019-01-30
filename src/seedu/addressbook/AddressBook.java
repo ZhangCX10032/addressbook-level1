@@ -126,6 +126,7 @@ public class AddressBook {
                                                    + "the last find/list call into the group identified by the second"
                                                    + "number";
     private static final String COMMAND_GROUP_PARAMETER = "INDEX GROUP_INDEX";
+    private static final String COMMAND_GROUP_EXAMPLE = COMMAND_GROUP_WORD + " 1" + " 1";
 
 
     private static final String COMMAND_CLEAR_WORD = "clear";
@@ -542,6 +543,22 @@ public class AddressBook {
      */
     private static int extractTargetIndexFromDeletePersonArgs(String rawArgs) {
         return Integer.parseInt(rawArgs.trim());
+    }
+
+
+    /**
+     * Checks validity of group person argument string's format.
+     *
+     * @param rawArgs raw command args string for the group person command
+     * @return whether the input args string is valid
+     */
+    private static boolean isGroupPersonArgsValid(String rawArgs) {
+        try {
+            final int extractedIndex = Integer.parseInt(rawArgs.trim()); // use standard libraries to parse
+            return extractedIndex >= DISPLAYED_INDEX_OFFSET;
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
     }
 
     /**
@@ -1117,6 +1134,14 @@ public class AddressBook {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_DELETE_WORD, COMMAND_DELETE_DESC) + LS
                 + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_DELETE_PARAMETER) + LS
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_DELETE_EXAMPLE) + LS;
+    }
+
+
+    /** Returns the string for showing 'group' command usage instruction */
+    private static String getUsageInfoForGroupCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_GROUP_WORD, COMMAND_GROUP_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_GROUP_PARAMETER) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_GROUP_EXAMPLE) + LS;
     }
 
     /** Returns string for showing 'clear' command usage instruction */
